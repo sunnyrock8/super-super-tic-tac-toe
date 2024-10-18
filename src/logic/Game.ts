@@ -1,6 +1,5 @@
 import { Player } from "../enums/Player";
 import { cloneObject } from "../utils/cloneObject";
-import { transpose } from "../utils/transpose";
 import { Cell } from "./Cell";
 import { Coordinate } from "./Coordinate";
 import { Grid } from "./Grid";
@@ -12,8 +11,10 @@ export class Game {
   private currentPlayer = Player.X;
   private currentSuperGrid = new Coordinate(0, 0, true);
   private currentNormalGrid = new Coordinate(0, 0, true);
+  private wonSuperGrids: Coordinate[] = [];
+  private wonGrids: [Coordinate, Coordinate][] = [];
 
-  constructor() {
+  constructor(private onGameWon?: (by: Player) => void) {
     this.initializeGame();
   }
 
@@ -26,6 +27,14 @@ export class Game {
       ],
       new Coordinate(0, 0)
     );
+  }
+
+  public get completedGrids() {
+    return this.wonGrids;
+  }
+
+  public get completedSuperGrids() {
+    return this.wonSuperGrids;
   }
 
   public getGrid() {
@@ -102,8 +111,15 @@ export class Game {
 
     cell.value = value;
 
-    normalGrid.checkWonBy();
-    superGrid.checkWonBy();
+    const normalGridWonBy = normalGrid.checkWonBy();
+    const superGridWonBy = superGrid.checkWonBy();
+
+    if (normalGridWonBy) {
+      this.wonGrids.push([superCoordinate, normalCoordinate]);
+    }
+    if (superGridWonBy) {
+      this.wonSuperGrids.push(superCoordinate);
+    }
     newGame.grid.checkWonBy();
 
     newGame.swapTurns();

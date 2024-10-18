@@ -19,6 +19,8 @@ export const GameComponent = ({
   setTimeElapsed: React.Dispatch<React.SetStateAction<number>>;
 }) => {
   const gameGrid = game.getGrid();
+  const wonSuperGrids = game.completedSuperGrids;
+  const wonGrids = game.completedGrids;
 
   return (
     <Board>
@@ -63,7 +65,16 @@ export const GameComponent = ({
                                 game.activeNormalGrid
                               );
                             const disabled =
-                              cell.value !== null || !activeSection;
+                              cell.value !== null ||
+                              !activeSection ||
+                              !!wonSuperGrids.find((c) =>
+                                c.equals(superGridCoordinates)
+                              ) ||
+                              !!wonGrids.find(
+                                ([s, n]) =>
+                                  s.equals(superGridCoordinates) &&
+                                  n.equals(normalGridCoordinates)
+                              );
 
                             return (
                               <Cell

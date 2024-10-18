@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { Game } from "./logic/Game";
 import { Player } from "./enums/Player";
@@ -6,12 +6,18 @@ import { GameComponent } from "./ui/GameComponent";
 import { DataComponent } from "./ui/DataComponent";
 
 function App() {
-  const [game, setGame] = useState(new Game());
+  const [game, setGame] = useState<Game>(new Game());
   const [timeElapsed, setTimeElapsed] = useState(0);
 
   const gameTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const gameGrid = game.getGrid();
+  const onGameWonBy = useCallback((by: Player) => {
+    alert(`Player ${by === Player.X ? "X" : "O"} wins!`);
+  }, []);
+
+  useEffect(() => {
+    setGame(new Game(onGameWonBy));
+  }, [onGameWonBy]);
 
   useEffect(() => {
     return () => {
@@ -21,14 +27,6 @@ function App() {
       }
     };
   }, [gameTimer]);
-
-  useEffect(() => {
-    const gameWonBy = gameGrid.wonBy;
-
-    if (gameWonBy !== null) {
-      alert("Player " + (gameWonBy === Player.X ? "X" : "O") + " wins");
-    }
-  }, [gameGrid]);
 
   return (
     <Main>
