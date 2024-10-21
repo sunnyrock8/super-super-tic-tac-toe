@@ -12,10 +12,15 @@ export class Game {
   private currentSuperGrid = new Coordinate(0, 0, true);
   private currentNormalGrid = new Coordinate(0, 0, true);
   private wonSuperGrids: Coordinate[] = [];
-  private wonGrids: [Coordinate, Coordinate][] = [];
+  private wonGrids: [Coordinate, Coordinate][] = []; // [Coordinate(Super Grid), Coordinate(Local Grid)][]
+  private numMovesPlayed = 0;
 
   constructor(private onGameWon?: (by: Player) => void) {
     this.initializeGame();
+  }
+
+  public incrementMoves() {
+    return ++this.numMovesPlayed;
   }
 
   private initializeGame() {
@@ -81,8 +86,12 @@ export class Game {
         this.currentSuperGrid.y,
         true
       );
-    }
-    if (normalGrid.wonBy !== null) {
+      this.currentNormalGrid = new Coordinate(
+        this.currentNormalGrid.x,
+        this.currentNormalGrid.y,
+        true
+      );
+    } else if (normalGrid.wonBy !== null) {
       this.currentNormalGrid = new Coordinate(
         this.currentNormalGrid.x,
         this.currentNormalGrid.y,
@@ -99,13 +108,19 @@ export class Game {
   ) {
     const newGame = this.copy();
 
-    const superGrid = newGame.grid.cells[superCoordinate.y][
-      superCoordinate.x
-    ] as Grid;
-    const normalGrid = superGrid.cells[normalCoordinate.y][
-      normalCoordinate.x
-    ] as Grid;
-    const cell = normalGrid.cells[cellCoordinate.y][cellCoordinate.x] as Cell;
+    // const superGrid = newGame.grid.cells[superCoordinate.y][
+    //   superCoordinate.x
+    // ] as Grid;
+    // const normalGrid = superGrid.cells[normalCoordinate.y][
+    //   normalCoordinate.x
+    // ] as Grid;
+    // const cell = normalGrid.cells[cellCoordinate.y][cellCoordinate.x] as Cell;
+    const [superGrid, normalGrid, cell] = newGame.getCell(
+      superCoordinate,
+      normalCoordinate,
+      cellCoordinate,
+      true
+    );
 
     if (cell.value !== null) return newGame;
 
@@ -113,6 +128,7 @@ export class Game {
 
     const normalGridWonBy = normalGrid.checkWonBy();
     const superGridWonBy = superGrid.checkWonBy();
+    const gameWonBy = newGame.grid.checkWonBy();
 
     if (normalGridWonBy) {
       this.wonGrids.push([superCoordinate, normalCoordinate]);
@@ -120,18 +136,25 @@ export class Game {
     if (superGridWonBy) {
       this.wonSuperGrids.push(superCoordinate);
     }
-    newGame.grid.checkWonBy();
+    if (gameWonBy) {
+      this.onGameWon && this.onGameWon(gameWonBy);
+    }
 
     newGame.swapTurns();
     newGame.swapPlayableArea(normalCoordinate, cellCoordinate);
+    const numMovesPlayed = newGame.incrementMoves();
+    if (numMovesPlayed === 729) {
+      alert("Draw!");
+    }
 
     return newGame;
   }
 
-  public getCell(
+  public getCell<T extends boolean | undefined>(
     superCoordinate: Coordinate,
     normalCoordinate: Coordinate,
-    cellCoordinate: Coordinate
+    cellCoordinate: Coordinate,
+    comprehensive: T = undefined as T
   ) {
     const superGrid = this.grid.cells[superCoordinate.y][
       superCoordinate.x
@@ -141,7 +164,11 @@ export class Game {
     ] as Grid;
     const cell = normalGrid.cells[cellCoordinate.y][cellCoordinate.x] as Cell;
 
-    return cell;
+    return (comprehensive ? [superGrid, normalGrid, cell] : cell) as T extends
+      | false
+      | undefined
+      ? Cell
+      : [Grid, Grid, Cell];
   }
 
   private initializeCellRow(n: number) {

@@ -55,7 +55,8 @@ export const GameComponent = ({
                             const cell = game.getCell(
                               new Coordinate(nSuperCol, nSuperRow),
                               new Coordinate(nNormalCol, nNormalRow),
-                              new Coordinate(nCellCol, nCellRow)
+                              new Coordinate(nCellCol, nCellRow),
+                              false
                             );
                             const activeSection =
                               superGridCoordinates.equals(
