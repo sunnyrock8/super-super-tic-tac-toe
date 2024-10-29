@@ -69,6 +69,8 @@ const TimeElapsedText = styled(DataText)`
 const GameCodeText = styled(DataText)`
   left: 2rem;
   top: 2rem;
+  width: fit-content;
+  height: fit-content;
 `;
 
 const ResetButton = styled.button`
