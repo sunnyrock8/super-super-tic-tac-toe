@@ -13,6 +13,10 @@ export class Coordinate {
     return this.yCoord;
   }
 
+  public toTuple() {
+    return [this.xCoord, this.yCoord];
+  }
+
   public equals(coordinate: Coordinate) {
     return (
       this.universal ||

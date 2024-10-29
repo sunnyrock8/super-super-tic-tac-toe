@@ -1,8 +1,11 @@
+import { arrayUnion, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { Player } from "../enums/Player";
+import { gameConverter, GameDoc } from "../models/GameDoc";
 import { cloneObject } from "../utils/cloneObject";
 import { Cell } from "./Cell";
 import { Coordinate } from "./Coordinate";
 import { Grid } from "./Grid";
+import { db } from "../api/firebase";
 
 const THREE_ARRAY = [0, 1, 2];
 
@@ -14,9 +17,35 @@ export class Game {
   private wonSuperGrids: Coordinate[] = [];
   private wonGrids: [Coordinate, Coordinate][] = []; // [Coordinate(Super Grid), Coordinate(Local Grid)][]
   private numMovesPlayed = 0;
+  private firebaseId: string | null = null;
 
   constructor(private onGameWon?: (by: Player) => void) {
     this.initializeGame();
+  }
+
+  static loadFrom(id: string, gameDoc: GameDoc): Game {
+    const game = new Game();
+
+    for (const move of gameDoc.moves) {
+      game.setCellValue(
+        move.by === 0 ? Player.X : Player.O,
+        new Coordinate(move.super[0], move.super[1]),
+        new Coordinate(move.local[0], move.local[1]),
+        new Coordinate(move.cell[0], move.cell[1])
+      );
+    }
+
+    if (gameDoc.moves.length > 0) {
+      const lastMove = gameDoc.moves.at(-1)!;
+      game.swapPlayableArea(
+        new Coordinate(...lastMove.local),
+        new Coordinate(...lastMove.cell)
+      );
+    }
+
+    game.firebaseId = id;
+
+    return game;
   }
 
   public incrementMoves() {
@@ -125,6 +154,18 @@ export class Game {
     if (cell.value !== null) return newGame;
 
     cell.value = value;
+
+    if (this.firebaseId) {
+      updateDoc(doc(db, "games", this.firebaseId), {
+        last_updated_at: new Date(),
+        moves: arrayUnion({
+          by: value === Player.X ? 0 : 1,
+          super: superCoordinate.toTuple(),
+          local: normalCoordinate.toTuple(),
+          cell: cellCoordinate.toTuple(),
+        }),
+      });
+    }
 
     const normalGridWonBy = normalGrid.checkWonBy();
     const superGridWonBy = superGrid.checkWonBy();
