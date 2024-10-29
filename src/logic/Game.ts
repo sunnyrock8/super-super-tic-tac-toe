@@ -63,6 +63,10 @@ export class Game {
     );
   }
 
+  public get gameCode() {
+    return this.firebaseId;
+  }
+
   public get completedGrids() {
     return this.wonGrids;
   }

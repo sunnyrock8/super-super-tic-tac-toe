@@ -30,6 +30,7 @@ export const DataComponent = ({
         {gameGrid.wonBy === null ? "'s turn" : " wins"}
       </CurrentPlayerText>
       <TimeElapsedText>{secondsToMmSs(timeElapsed)}</TimeElapsedText>
+      <GameCodeText>{game.gameCode}</GameCodeText>
       <ResetButton
         onClick={() => {
           setGame(new Game());
@@ -62,6 +63,11 @@ const CurrentPlayerText = styled(DataText)`
 
 const TimeElapsedText = styled(DataText)`
   right: 2rem;
+  top: 2rem;
+`;
+
+const GameCodeText = styled(DataText)`
+  left: 2rem;
   top: 2rem;
 `;
 
