@@ -75,7 +75,9 @@ export const GameComponent = ({
                                 ([s, n]) =>
                                   s.equals(superGridCoordinates) &&
                                   n.equals(normalGridCoordinates)
-                              );
+                              ) ||
+                              (game.isOnline &&
+                                game.activePlayer !== game.self);
 
                             return (
                               <Cell

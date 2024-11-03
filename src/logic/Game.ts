@@ -18,13 +18,19 @@ export class Game {
   private wonGrids: [Coordinate, Coordinate][] = []; // [Coordinate(Super Grid), Coordinate(Local Grid)][]
   private numMovesPlayed = 0;
   private firebaseId: string | null = null;
+  public self = Player.X;
 
   constructor(private onGameWon?: (by: Player) => void) {
     this.initializeGame();
   }
 
-  static loadFrom(id: string, gameDoc: GameDoc): Game {
+  public get isOnline() {
+    return !!this.firebaseId;
+  }
+
+  static loadFrom(id: string, gameDoc: GameDoc, player: Player): Game {
     const game = new Game();
+    game.self = player;
 
     for (const move of gameDoc.moves) {
       game.setCellValue(
@@ -41,6 +47,10 @@ export class Game {
         new Coordinate(...lastMove.local),
         new Coordinate(...lastMove.cell)
       );
+      console.log(lastMove.by, game.activePlayer);
+      if (lastMove.by === game.activePlayer) {
+        game.swapTurns();
+      }
     }
 
     game.firebaseId = id;

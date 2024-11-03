@@ -49,8 +49,9 @@ function App() {
           cancelLabel: "Join with Code",
         });
 
+        let id: string | null = null;
         if (isNew) {
-          const id = Math.random().toString(16).split(".").at(-1)!;
+          id = Math.random().toString(16).split(".").at(-1)!;
           const newGameDoc = {
             moves: [],
             created_at: new Date(),
@@ -59,33 +60,33 @@ function App() {
           };
 
           await setDoc(doc(db, "games", id), newGameDoc);
-          setGame(Game.loadFrom(id, newGameDoc));
+          setGame(Game.loadFrom(id, newGameDoc, Player.X));
         } else {
-          let id: string | null = "";
-
           while (!id) {
             id = window.prompt("Enter game ID:");
           }
-
-          const unsub = onSnapshot(
-            doc(db, "games", id).withConverter(gameConverter),
-            async (gameDoc) => {
-              if (!gameDoc.exists())
-                return alert("No game with this game code was found!");
-
-              const game = gameDoc.data();
-              if (game.players_joined < 2) {
-                await updateDoc(doc(db, "games", id!), {
-                  last_updated_at: new Date(),
-                  players_joined: game.players_joined + 1,
-                });
-              }
-              setGame(Game.loadFrom(gameDoc.id, game));
-            }
-          );
-
-          return () => unsub();
         }
+
+        const unsub = onSnapshot(
+          doc(db, "games", id).withConverter(gameConverter),
+          async (gameDoc) => {
+            if (!gameDoc.exists())
+              return alert("No game with this game code was found!");
+
+            const game = gameDoc.data();
+            if (game.players_joined < 2) {
+              await updateDoc(doc(db, "games", id!), {
+                last_updated_at: new Date(),
+                players_joined: game.players_joined + 1,
+              });
+            }
+            setGame(
+              Game.loadFrom(gameDoc.id, game, isNew ? Player.O : Player.X)
+            );
+          }
+        );
+
+        return () => unsub();
       } else {
       }
     })();
